@@ -2,9 +2,11 @@ import schedule
 import os
 import datetime
 # change these variables
+# directory where the logs of track.py are ituated
 logs_dir="/home/shin164mi/.dlogs"
+# fill the list with calendar labels from your google calendar
+names=[]
 # permanent variables
-names=["REGULAR","HW","STUDY","REST","CLASSES","EXTRA"]
 current_date=datetime.datetime.now().date()
 current_date="{:04d}-{:02d}-{:02d}".format(current_date.year,current_date.month,current_date.day)
 # Functions

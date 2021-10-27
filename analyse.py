@@ -1,10 +1,10 @@
-import main
+import schedule
 import os
 import datetime
 # change these variables
-logs_dir="C:/Users/aksha/Desktop/Time_Logs"
+logs_dir="/home/shin164mi/.dlogs"
 # permanent variables
-names=["REGULAR","CODING","TUITION","STUDY","GAME","SCHOOL","VMC"]
+names=["REGULAR","HW","STUDY","REST","CLASSES","EXTRA"]
 current_date=datetime.datetime.now().date()
 current_date="{:04d}-{:02d}-{:02d}".format(current_date.year,current_date.month,current_date.day)
 # Functions
@@ -36,12 +36,29 @@ def read_log(date,name):
         tds+=td
     whitespaces=len(name)+3
     return tds
+def duration(events):
+    durations=[]
+    if not events:
+        return None
+    for event in events:
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        end = event['end'].get('dateTime', event['end'].get('date'))
+        start=start.split("T")[1]
+        end=end.split("T")[1]
+        start=start.split("+")[0]
+        end=end.split("+")[0]
+        start_time=datetime.datetime.strptime(start,"%H:%M:%S")
+        end_time=datetime.datetime.strptime(end,"%H:%M:%S")
+        duration=end_time-start_time
+        durations.append(duration)
+    return durations
+   
 # execute
 if __name__=="__main__":
     print('Getting the events ....')
     for name in names:
         try:
-            durations_cal=main.main(name)
+            durations_cal=duration(schedule.get_events())
             td_cal=datetime.timedelta()
             for td in durations_cal:
                 td_cal+=td

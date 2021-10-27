@@ -3,7 +3,7 @@ import os
 import datetime
 # change these variables
 # directory where the logs of track.py are ituated
-logs_dir="/home/shin164mi/.dlogs"
+logs_dir=""
 # fill the list with calendar labels from your google calendar
 names=[]
 # permanent variables

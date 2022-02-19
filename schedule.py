@@ -7,8 +7,9 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import sys
+import argparse
 
-# If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
+# If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 cal_ids = {
@@ -20,7 +21,10 @@ cal_ids = {
     "CLASSES": "",
 }
 
-
+parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
+parser.add_argument('-n',type=int,required=False,default=0)
+args=parser.parse_args()
+day_num=args.n
 def main():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
@@ -30,7 +34,7 @@ def main():
     event_name = []
     event_names_temp = []
     creds = None
-    # The file /etc/1337/Analyse/token.pickle stores the user's access and refresh tokens, and is
+    # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
     if os.path.exists("token.pickle"):
@@ -54,13 +58,13 @@ def main():
     now_dt = datetime.datetime.now()
     time_min = (
         datetime.datetime(
-            year=now_dt.year, month=now_dt.month, day=now_dt.day
+            year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num
         ).isoformat()
         + "Z"
     )
     time_max = (
         datetime.datetime(
-            year=now_dt.year, month=now_dt.month, day=now_dt.day + 1
+            year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num + 1
         ).isoformat()
         + "Z"
     )
@@ -132,7 +136,7 @@ if __name__ == "__main__":
         if category == None:
             category = "REGULAR"
         with open(org_path, "a") as f:
-            f.write(f"* {category}\n")
+            f.write(f"* {category} \n")
             f.write(f"** {name} [ {category} ]\n")
             f.write(f"<{event.get('start')}-{event.get('end')}>\n")
 

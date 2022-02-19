@@ -103,7 +103,7 @@ if __name__ == "__main__":
             .split("+")[0]
             .split(":")[1]
         )
-        start = "<" + start_date + " " + start_time
+        start = start_date + " " + start_time
 
         end = (
             event["end"]
@@ -132,8 +132,9 @@ if __name__ == "__main__":
         if category == None:
             category = "REGULAR"
         with open(org_path, "a") as f:
-            f.write(f"* {name} [ {category} ]\n")
-            f.write(f"{event.get('start')}-{event.get('end')}>\n")
+            f.write(f"* {category}\n")
+            f.write(f"** {name} [ {category} ]\n")
+            f.write(f"<{event.get('start')}-{event.get('end')}>\n")
 
         print(event.get("start"))
         print(f"  | {name} [{category}]")

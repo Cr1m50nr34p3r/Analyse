@@ -12,12 +12,12 @@ import sys
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 cal_ids = {
-    "REGULAR": "akshatgarg789@gmail.com",
-    "STUDY": "tqnor6go6aafauutj6r5c7jqn4@group.calendar.google.com",
-    "REST": "to7hn4rd6amosc2jd317n26kbg@group.calendar.google.com",
-    "HW": "2k7j09evrdkmmoqf231nurgjho@group.calendar.google.com",
-    "EXTRA": "t62kl99bos1gpgq2vs03bu3m80@group.calendar.google.com",
-    "CLASSES": "hs2frss259nb72ho1bjtut8j6o@group.calendar.google.com",
+    "REGULAR": "",
+    "STUDY": "",
+    "REST": "",
+    "HW": "",
+    "EXTRA": "",
+    "CLASSES": "",
 }
 
 

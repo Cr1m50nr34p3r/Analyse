@@ -7,18 +7,23 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import sys
+import argparse
 
 # If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 cal_ids = {
-    "REGULAR": "akshatgarg789@gmail.com",
-    "STUDY": "tqnor6go6aafauutj6r5c7jqn4@group.calendar.google.com",
-    "REST": "to7hn4rd6amosc2jd317n26kbg@group.calendar.google.com",
-    "HW": "2k7j09evrdkmmoqf231nurgjho@group.calendar.google.com",
-    "EXTRA": "t62kl99bos1gpgq2vs03bu3m80@group.calendar.google.com",
-    "CLASSES": "hs2frss259nb72ho1bjtut8j6o@group.calendar.google.com",
+    "REGULAR": "",
+    "STUDY": "",
+    "REST": "",
+    "HW": "",
+    "EXTRA": "",
+    "CLASSES": "",
 }
+parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
+parser.add_argument('-n',type=int,required=False,default=0,help="day for example 1 = tomorrow default is 0 i.e. today")
+args=parser.parse_args()
+day_num=args.n
 
 
 def main():
@@ -30,7 +35,7 @@ def main():
     event_name = []
     event_names_temp = []
     creds = None
-    # The file /etc/1337/Analyse/token.pickle stores the user's access and refresh tokens, and is
+    # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
     if os.path.exists("token.pickle"):
@@ -54,13 +59,13 @@ def main():
     now_dt = datetime.datetime.now()
     time_min = (
         datetime.datetime(
-            year=now_dt.year, month=now_dt.month, day=now_dt.day
+            year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num
         ).isoformat()
         + "Z"
     )
     time_max = (
         datetime.datetime(
-            year=now_dt.year, month=now_dt.month, day=now_dt.day + 1
+            year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num + 1
         ).isoformat()
         + "Z"
     )

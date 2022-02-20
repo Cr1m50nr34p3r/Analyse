@@ -22,7 +22,7 @@ cal_ids = {
 }
 
 parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
-parser.add_argument('-n',type=int,required=False,default=0)
+parser.add_argument('-n',type=int,required=False,default=0,help="day for example 1 = tomorrow default is 0 i.e. today")
 args=parser.parse_args()
 day_num=args.n
 def main():
@@ -128,8 +128,9 @@ if __name__ == "__main__":
             {"start": start, "end": end, "name": name, "category": category}
         )
     events_db = sorted(events_db, key=lambda i: i["start"])
-    org_path = os.environ["HOME"] + "/org/Calender.org"
-    os.remove(org_path)
+    org_path = os.environ["HOME"] + "/org/" + start_date + ".org"
+    if os.path.isfile(org_path):
+        os.remove(org_path)
     for event in events_db:
         name = event.get("name")
         category = event.get("category")

@@ -1,4 +1,13 @@
-#!/usr/bin/python
+#/usr/bin/python
+############################################################
+###          _              _       _                    ###
+### ___  ___| |__   ___  __| |_   _| | ___   _ __  _   _ ###
+###/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \ | '_ \| | | |###
+###\__ \ (__| | | |  __/ (_| | |_| | |  __/_| |_) | |_| |###
+###|___/\___|_| |_|\___|\__,_|\__,_|_|\___(_) .__/ \__, |###
+###                                         |_|    |___/ ###
+############################################################
+### Imports
 from __future__ import print_function
 import datetime
 import pickle
@@ -9,6 +18,7 @@ from google.auth.transport.requests import Request
 import sys
 import argparse
 
+### Variables
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
@@ -21,10 +31,13 @@ cal_ids = {
     "CLASSES": "",
 }
 
+### Parser
 parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
 parser.add_argument('-n',type=int,required=False,default=0,help="day for example 1 = tomorrow default is 0 i.e. today")
 args=parser.parse_args()
 day_num=args.n
+
+### Main Function
 def main():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.

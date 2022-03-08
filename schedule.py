@@ -15,6 +15,7 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import google.auth.exceptions
 import argparse
 import platform
 from rich import pretty, print
@@ -35,7 +36,7 @@ parser.add_argument('-n',  type=int, required=False,  default=0,  help="day for 
 parser.add_argument('--md', type=bool, required=False, default=True, help="save output in markdown")
 args = parser.parse_args()
 day_num = args.n
-md = args.md
+is_md = args.md
 
 
 def main():
@@ -48,8 +49,12 @@ def main():
     # created automatically when the authorization flow completes for the first
     # time.
     if os.path.exists("token.pickle"):
-        with open("token.pickle", "rb") as token:
-            creds = pickle.load(token)
+        try:
+            with open("token.pickle", "rb") as token:
+                creds = pickle.load(token)
+        except google.auth.exceptions.RefreshError:
+            print("token.pickle expired creating new one ....")
+            pass
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -164,6 +169,6 @@ if __name__ == "__main__":
         print(f"  | {name} [{category}]")
         print(event.get("end"))
         print()
-    if md:
+    if is_md:
         print("saving output to md")
         md()

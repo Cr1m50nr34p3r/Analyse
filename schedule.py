@@ -150,6 +150,8 @@ def md():
     events_db = init_db()
     for event in events_db:
         name = event.get("name")
+        if name is None:
+            name="UNTITLED"
         category = event.get("category")
         if category is None:
             category = "REGULAR"
@@ -162,6 +164,8 @@ if __name__ == "__main__":
     events_db = init_db()
     for event in events_db:
         name = event.get("name")
+        if name is None:
+            name="UNTITLED"
         category = event.get("category")
         if category is None:
             category = "REGULAR"

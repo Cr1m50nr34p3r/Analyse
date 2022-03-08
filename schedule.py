@@ -15,25 +15,28 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-import sys
 import argparse
+import platform
 ### Variables
+system = platform.system()
 # If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 cal_ids = {
-    "REGULAR": "",
-    "STUDY": "",
-    "REST": "",
-    "HW": "",
-    "EXTRA": "",
-    "CLASSES": "",
+    "REGULAR": "akshatgarg789@gmail.com",
+    "STUDY": "tqnor6go6aafauutj6r5c7jqn4@group.calendar.google.com",
+    "REST": "to7hn4rd6amosc2jd317n26kbg@group.calendar.google.com",
+    "HW": "2k7j09evrdkmmoqf231nurgjho@group.calendar.google.com",
+    "EXTRA": "t62kl99bos1gpgq2vs03bu3m80@group.calendar.google.com",
+    "CLASSES": "hs2frss259nb72ho1bjtut8j6o@group.calendar.google.com",
 }
 ### Parser
 parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
-parser.add_argument('-n',type=int,required=False,default=0,help="day for example 1 = tomorrow default is 0 i.e. today")
-args=parser.parse_args()
-day_num=args.n
+parser.add_argument('-n',  type=int, required=False,  default=0,  help="day for example 1 = tomorrow default is 0 i.e. today")
+parser.add_argument('--md', type=bool, required=False, default=True, help="save output in markdown")
+args = parser.parse_args()
+day_num = args.n
+md = args.md
 
 
 def main():
@@ -41,9 +44,6 @@ def main():
     Prints the start and name of the next 10 events on the user's calendar.
     """
     events = []
-    durations = []
-    event_name = []
-    event_names_temp = []
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -98,7 +98,7 @@ def main():
     return events
 
 
-if __name__ == "__main__":
+def init_db():
     events = main()
     events_db = []
     for event in events:
@@ -120,12 +120,51 @@ if __name__ == "__main__":
             {"start": start, "end": end, "name": name, "category": category}
         )
     events_db = sorted(events_db, key=lambda i: i["start"])
+    return events_db
+
+
+def md():
+    if system == "Windows":
+        logs_dir = os.getenv('USERPROFILE').replace('\\',  '/')
+        +"/Desktop/.dlogs/.Schedule/"
+    else:
+        logs_dir = os.getenv('HOME')+"/.dlogs/.Schedule/"
+    now_dt = datetime.datetime.now()
+    date = (
+        datetime.datetime(
+            year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num
+        )
+    )
+
+    def_date = str(round(int(date.strftime("%Y")),  -1)) + "s/" + date.strftime("%Y") + "/" + date.strftime("%b")
+    if not os.path.exists(logs_dir+def_date):
+        os.makedirs(logs_dir+def_date)
+    sch = logs_dir+def_date + "/" + date.strftime('%d-%m-%Y')
+    with open(f"{sch}.md", 'w') as f:
+        f.write("| Time | Name |\n")
+        f.write("| :---: | :--: |")
+    events_db = init_db()
     for event in events_db:
         name = event.get("name")
         category = event.get("category")
-        if category == None:
+        if category is None:
+            category = "REGULAR"
+        with open(f"{sch}.md", 'a') as f:
+            f.write(f"\n| {event.get('start')} | {name} [{category}] |")
+
+
+if __name__ == "__main__":
+    print("getting events.....")
+    events_db = init_db()
+    for event in events_db:
+        name = event.get("name")
+        category = event.get("category")
+        if category is None:
             category = "REGULAR"
         print(event.get("start"))
         print(f"  | {name} [{category}]")
         print(event.get("end"))
         print()
+    if md:
+        print("saving output to md")
+        md()

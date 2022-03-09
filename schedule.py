@@ -29,6 +29,11 @@ SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 # Use format "{label}": "{cal_id}"
 cal_ids = {
     "REGULAR": "akshatgarg789@gmail.com",
+    "STUDY": "tqnor6go6aafauutj6r5c7jqn4@group.calendar.google.com",
+    "REST": "to7hn4rd6amosc2jd317n26kbg@group.calendar.google.com",
+    "HW": "2k7j09evrdkmmoqf231nurgjho@group.calendar.google.com",
+    "EXTRA": "t62kl99bos1gpgq2vs03bu3m80@group.calendar.google.com",
+    "CLASSES": "hs2frss259nb72ho1bjtut8j6o@group.calendar.google.com",
 }
 ### Parser
 parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')

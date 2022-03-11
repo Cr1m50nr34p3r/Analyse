@@ -26,6 +26,8 @@ pretty.install()
 system = platform.system()
 # If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+TIMEZONE = 'India'
+dGMT="+05:30"
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 # Use format "{label}": "{cal_id}"
 cal_ids = {
@@ -39,10 +41,12 @@ cal_ids = {
 # Parser
 parser = argparse.ArgumentParser(description='Import google calendar events to doom emacs')
 parser.add_argument('-n',  type=int, required=False,  default=0,  help="day for example 1 = tomorrow default is 0 i.e. today")
-parser.add_argument('--md', type=bool, required=False, default=True, help="save output in markdown")
+parser.add_argument('--md', action='store_true', required=False, help="save output in markdown")
+parser.add_argument('-u', '--upload', action='store_true', required=False, help="wheather to upload the file or write to it")
 args = parser.parse_args()
 day_num = args.n
 is_md = args.md
+is_upload = args.u
 
 
 def get_file():
@@ -65,7 +69,7 @@ def get_file():
     return sch
 
 
-def main():
+def init_api():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -93,8 +97,11 @@ def main():
             pickle.dump(creds, token)
 
     service = build("calendar", "v3", credentials=creds)
+    return service
 
-    # Call the Calendar API
+
+def get_events():
+    # Set up Time variables
     now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
     now_dt = datetime.datetime.now()
     time_min = (
@@ -109,6 +116,7 @@ def main():
         ).isoformat()
         + "Z"
     )
+    service = init_api()
     for cal_id in cal_ids:
 
         cal = cal_ids.get(cal_id.upper())
@@ -125,11 +133,6 @@ def main():
             .execute()
         )
         events += events_result.get("items", [])
-    return events
-
-
-def init_db():
-    events = main()
     events_db = []
     for event in events:
         start = (
@@ -158,7 +161,7 @@ def write_md():
     with open(f"{file}.md", 'w') as f:
         f.write("| Time | Name |\n")
         f.write("| :---: | :--: |")
-    events_db = init_db()
+    events_db = get_events()
     for event in events_db:
         name = event.get("name")
         if name is None:
@@ -170,7 +173,7 @@ def write_md():
             f.write(f"\n| {event.get('start')} | {name} [{category}] |")
 
 
-def upload():
+def parse_md():
     event_db = []
     now_dt = datetime.datetime.now()
     file = get_file() + ".md"
@@ -219,7 +222,7 @@ def upload():
             columns = line.split(' | ')
             start_time = datetime.datetime.strptime(columns[0].replace('| ', ''), "%H:%M:%S").replace(year=now_dt.year, day=now_dt.day, month=now_dt.month)
             name = columns[1].split('[')[0]
-            label = columns[1].split('[')[1].replace('] |\n', '')
+            label = columns[1].split('[')[1].replace('] |', '')
             end_time = datetime.datetime(
                 year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num + 1
             ).isoformat()
@@ -230,24 +233,48 @@ def upload():
                     'end_time': end_time
                     }
             event_db.append(event)
-    return event_db
+            return event_db
+
+
+def upload_md():
+    print("Reading file ...")
+    event_db = parse_md()
+    for data in event_db:
+        event = {
+                'summary': data['name'],
+                'start': {
+                    'dateTime': f"{data['start_time'].strftime('%Y-%d-%m')}T{data['start_time'].strftime('%H-%M-%S')}{dGMT}",
+                    'TimeZone': TIMEZONE
+                    },
+                'end': {
+                    'dateTime': f"{data['end_time'].strftime('%Y-%d-%m')}T{data['end_time'].strftime('%H-%M-%S')}{dGMT}",
+                    'TimeZone': TIMEZONE
+                    }
+                }
+        print("Uploading events")
+        service = init_api()
+        up_event = service.events().insert(calendarId=cal_ids[data['label']], body=event).execute()
+        print(f"Event created %s {up_event.get('htmlLink')}")
 
 
 if __name__ == "__main__":
-    print(upload())
-    # print("getting events.....")
-    # events_db = init_db()
-    # for event in events_db:
-        # name = event.get("name")
-        # if name is None:
-            # name="UNTITLED"
-        # category = event.get("category")
-        # if category is None:
-            # category = "REGULAR"
-        # print(event.get("start"))
-        # print(f"  | {name} [{category}]")
-        # print(event.get("end"))
-        # print()
-    # if is_md:
-        # print("saving output to md")
-        # write_md()
+    print(is_md)
+    if not is_upload:
+        print("getting events.....")
+        events_db = get_events()
+        for event in events_db:
+            name = event.get("name")
+            if name is None:
+                name="UNTITLED"
+            category = event.get("category")
+            if category is None:
+                category = "REGULAR"
+            print(event.get("start"))
+            print(f"  | {name} [{category}]")
+            print(event.get("end"))
+            print()
+        if is_md:
+            print("saving output to md")
+            write_md()
+    elif is_upload:
+        upload_md()

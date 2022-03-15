@@ -31,6 +31,10 @@ SCOPES = ["https://www.googleapis.com/auth/calendar/"]
 TIMEZONE = 'Asia/Kolkata'
 # TIMEZONE = 'UTC'
 dGMT = datetime.timedelta(hours=-5, minutes=-30)
+# Credentials
+cred_path = "credentials.json"
+# Token
+token_path = "token.pickle"
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 # Use format "{label}": "{cal_id}"
 cal_ids = {
@@ -99,25 +103,25 @@ def init_api():
     Prints the start and name of the next 10 events on the user's calendar.
     """
     creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
+    # The file token_path stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists("token.pickle"):
+    if os.path.exists("token_path"):
         try:
-            with open("token.pickle", "rb") as token:
+            with open("token_path", "rb") as token:
                 creds = pickle.load(token)
         except google.auth.exceptions.RefreshError:
-            print_center_text("token.pickle expired creating new one ....")
+            print_center_text("token_path expired creating new one ....")
             pass
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open("token.pickle", "wb") as token:
+        with open("token_path", "wb") as token:
             pickle.dump(creds, token)
 
     service = build("calendar", "v3", credentials=creds)

@@ -27,8 +27,8 @@ pretty.install()
 system = platform.system()
 # If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar/"]
-# TIMEZONE = 'India/Kolkata'
-TIMEZONE = 'UTC'
+TIMEZONE = 'Asia/Kolkata'
+# TIMEZONE = 'UTC'
 dGMT = datetime.timedelta(hours=-5, minutes=-30)
 # edit and fill in the calendar ids which can be found in google calendar settings under the settings for specefic label
 # Use format "{label}": "{cal_id}"
@@ -84,7 +84,7 @@ def get_file():
         )
     )
 
-    def_date = str(round(int(date.strftime("%Y")),  -1)) + "s/" + date.strftime("%Y") + "/" + date.strftime("%b")
+    def_date = str(round(int(date.strftime("%Y")),  -1)) + "s/" + date.strftime("%Y") + "/" + date.strftime("%b") + "/" + date.strftime("%d-%m-%Y")
     if not os.path.exists(logs_dir+def_date):
         os.makedirs(logs_dir+def_date)
     sch = logs_dir+def_date + "/" + date.strftime('%d-%m-%Y')
@@ -157,24 +157,13 @@ def get_events():
         events += events_result.get("items", [])
     events_db = []
     for event in events:
-        start = (
-            event["start"]
-            .get("dateTime", event["start"].get("date"))
-            .split("T")[1]
-            .split("+")[0]
-        )
-        end = (
-            event["end"]
-            .get("dateTime", event["end"].get("date"))
-            .split("T")[1]
-            .split("+")[0]
-        )
         category = event.get("organizer").get("displayName")
         name = event.get("summary")
         events_db.append(
-            {"start": start, "end": end, "name": name, "category": category}
+            {"start": event['start'], "end": event['end'], "name": name, "category": category}
         )
-    events_db = sorted(events_db, key=lambda i: i["start"])
+    # Sort events by start time
+    events_db.sort(key=lambda x: x["start"].get("dateTime"))
     return events_db
 
 
@@ -186,13 +175,19 @@ def write_md():
     events_db = get_events()
     for event in events_db:
         name = event.get("name")
+        start = (
+            event["start"]
+            .get("dateTime", event["start"].get("date"))
+            .split("T")[1]
+            .split("+")[0]
+        )
         if name is None:
             name = "UNTITLED"
         category = event.get("category")
         if category is None:
             category = "REGULAR"
         with open(f"{file}.md", 'a') as f:
-            f.write(f"\n| {event.get('start')} | {name} [{category}] |")
+            f.write(f"\n| {start} | {name} [{category}] |")
 
 
 def parse_md():
@@ -277,7 +272,7 @@ def upload_md():
         service = init_api()
         if data['label'] == "REGULAR":
             cal_ids['REGULAR'] = 'primary'
-        event = service.events().insert(calendarId=cal_ids[data['label']], body=event).execute()
+        event = service.events().insert(calendarId=cal_ids[data['label'].upper()], body=event).execute()
         print(f"Event created at {event.get('htmlLink')}")
 
 
@@ -287,15 +282,27 @@ if __name__ == "__main__":
         output = ""
         events_db = get_events()
         for event in events_db:
+            start = (
+                event["start"]
+                .get("dateTime", event["start"].get("date"))
+                .split("T")[1]
+                .split("+")[0]
+            )
+            end = (
+                event["end"]
+                .get("dateTime", event["end"].get("date"))
+                .split("T")[1]
+                .split("+")[0]
+            )
             name = event.get("name")
             if name is None:
                 name = "UNTITLED"
             category = event.get("category")
             if category is None:
                 category = "REGULAR"
-            output += event.get("start") 
+            output += start 
             output += f"  | {name} [{category}]" + " | "
-            output += event.get("end") + "\n"
+            output += end + "\n"
         print_center_text(output)
         if is_md:
             print(f"SAVING OUTPUT TO MD FILE {get_file()}")

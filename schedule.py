@@ -19,6 +19,7 @@ import google.auth.exceptions
 import argparse
 import platform
 import sys
+import json
 from rich import pretty, print
 import shutil
 
@@ -45,10 +46,12 @@ parser = argparse.ArgumentParser(description='Import google calendar events to d
 parser.add_argument('-n',  type=int, required=False,  default=0,  help="day for example 1 = tomorrow default is 0 i.e. today")
 parser.add_argument('--md', action='store_true', required=False, help="save/upload output in markdown file")
 parser.add_argument('-u', action='store_true', required=False, help="wheather to upload the file or write to it")
+parser.add_argument('-j', action='store_false', required=False, help="wheather to save the file as json")
 args = parser.parse_args()
 day_num = args.n
 is_md = args.md
 is_upload = args.u
+is_json = args.j
 
 
 def print_center_text(text: str):
@@ -160,7 +163,7 @@ def get_events():
         category = event.get("organizer").get("displayName")
         name = event.get("summary")
         events_db.append(
-            {"start": event['start'], "end": event['end'], "name": name, "category": category}
+            {"start": event['start'], "end": event['end'], "name": name, "label": category}
         )
     # Sort events by start time
     events_db.sort(key=lambda x: x["start"].get("dateTime"))
@@ -239,7 +242,7 @@ def parse_md():
             columns = line.split(' | ')
             start_time = (datetime.datetime.strptime(columns[0].replace('| ', ''), "%H:%M:%S").replace(year=now_dt.year, day=now_dt.day + day_num, month=now_dt.month) + dGMT).isoformat()
             name = columns[1].split('[')[0]
-            label = columns[1].split('[')[1].replace('] |\n', '')
+            label = columns[1].split('[')[1].replace('] |', '')
             end_time = (datetime.datetime(
                 year=now_dt.year, month=now_dt.month, day=now_dt.day + day_num + 1
             ) + dGMT).isoformat()
@@ -252,29 +255,66 @@ def parse_md():
             event_db.append(event)
         return event_db
 
+def parse_json():
+    file = get_file() + ".json"
+    if not os.path.isfile(file) or os.stat(file).st_size == 0:
+        print_center_text(f"file {file} either does not exist or is empty")
+        sys.exit()
+    # read json file to a dict
+    with open(file, 'r') as buffer:
+        data = json.load(buffer)
+    return data
 
-def upload_md():
+def upload(is_json: bool = True, is_md: bool = False):
     print("Reading file ...")
-    event_db = parse_md()
-    for data in event_db:
-        event = {
-                'summary': data['name'],
-                'start': {
-                    'dateTime': f"{data['start_time']}Z",
-                    'TimeZone': TIMEZONE
-                    },
-                'end': {
-                    'dateTime': f"{data['end_time']}Z",
-                    'TimeZone': TIMEZONE
+    if is_md:
+        event_db = parse_md()
+        for data in event_db:
+            event = {
+                    'summary': data['name'],
+                    'start': {
+                        'dateTime': f"{data['start_time']}Z",
+                        'TimeZone': TIMEZONE
+                        },
+                    'end': {
+                        'dateTime': f"{data['end_time']}Z",
+                        'TimeZone': TIMEZONE
+                        }
                     }
-                }
-        print("Uploading events")
-        service = init_api()
-        if data['label'] == "REGULAR":
-            cal_ids['REGULAR'] = 'primary'
-        event = service.events().insert(calendarId=cal_ids[data['label'].upper()], body=event).execute()
-        print(f"Event created at {event.get('htmlLink')}")
+            print("Uploading events")
+            service = init_api()
+            if data['label'] == "REGULAR":
+                cal_ids['REGULAR'] = 'primary'
+            event = service.events().insert(calendarId=cal_ids[data['label'].upper()], body=event).execute()
+            print(f"Event created at {event.get('htmlLink')}")
+    else:
+        event_db = parse_json()
+        # upload events in event_db
+        for data in event_db:
+            print("Uploading events")
+            service = init_api()
+            # create dict event which has every field in data except for label field
+            event = {
+                    'summary': data['name'],
+                    'start': data['start'],
+                    'end': data['end']
+                    }
+            if data['label'] == "REGULAR":
+                cal_ids['REGULAR'] = 'primary'
+            event = service.events().insert(calendarId=cal_ids[data['label'].upper()], body=event).execute()
+            print(f"Event created at {event.get('htmlLink')}")
 
+
+# Write to json file
+def write_json():
+    event_db = get_events()
+    file = get_file()
+    # Change all none values in event_db to "Regular"
+    for event in event_db:
+        if event.get("label") is None:
+            event["label"] = "REGULAR"
+    with open(f"{file}.json", 'w') as f:
+        json.dump(event_db, f, indent=4)
 
 if __name__ == "__main__":
     if not is_upload:
@@ -297,7 +337,7 @@ if __name__ == "__main__":
             name = event.get("name")
             if name is None:
                 name = "UNTITLED"
-            category = event.get("category")
+            category = event.get("label")
             if category is None:
                 category = "REGULAR"
             output += start 
@@ -305,7 +345,10 @@ if __name__ == "__main__":
             output += end + "\n"
         print_center_text(output)
         if is_md:
-            print(f"SAVING OUTPUT TO MD FILE {get_file()}")
+            print(f"SAVING OUTPUT TO MD FILE {get_file()}.md")
             write_md()
+        if is_json:
+            print(f"SAVING OUTPUT TO JSON FILE {get_file()}.json")
+            write_json()
     else:
-        upload_md()
+        upload(is_json, is_md)

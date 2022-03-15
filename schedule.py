@@ -27,7 +27,7 @@ pretty.install()
 # Variables
 system = platform.system()
 # If modifying these scopes, delete the file /etc/1337/Analyse/token.pickle.
-SCOPES = ["https://www.googleapis.com/auth/calendar/"]
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 TIMEZONE = 'Asia/Kolkata'
 # TIMEZONE = 'UTC'
 dGMT = datetime.timedelta(hours=-5, minutes=-30)

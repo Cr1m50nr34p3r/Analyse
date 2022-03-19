@@ -106,9 +106,9 @@ def init_api():
     # The file token_path stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists("token_path"):
+    if os.path.exists(token_path):
         try:
-            with open("token_path", "rb") as token:
+            with open(token_path, "rb") as token:
                 creds = pickle.load(token)
         except google.auth.exceptions.RefreshError:
             print_center_text("token_path expired creating new one ....")
@@ -121,7 +121,7 @@ def init_api():
             flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open("token_path", "wb") as token:
+        with open(token_path, "wb") as token:
             pickle.dump(creds, token)
 
     service = build("calendar", "v3", credentials=creds)
@@ -344,7 +344,7 @@ if __name__ == "__main__":
             category = event.get("label")
             if category is None:
                 category = "REGULAR"
-            output += start 
+            output += start
             output += f"  | {name} [{category}]" + " | "
             output += end + "\n"
         print_center_text(output)
